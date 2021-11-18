@@ -62,6 +62,8 @@ for sta_idx in range(0,210,6):
     M.append(m_arr)
     delta.append(delta_arr)
     
+    # quick note
+    
 def make_delta(mask_vec): 
     # Constructs time decay matrix from mask time series, delta
     delta_vec = np.zeros(len(mask_vec))
