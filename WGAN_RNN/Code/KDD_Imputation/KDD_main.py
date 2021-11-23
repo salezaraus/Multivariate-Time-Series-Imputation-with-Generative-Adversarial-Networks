@@ -22,6 +22,7 @@ import argparse
 import numpy as np
 from readKDD import ReadKDD_Data
 import os
+from utils import show_all_variables
 
 """main"""
 def main():
@@ -33,8 +34,8 @@ def main():
     parser.add_argument('--impute-iter', type=int, default=800)
     parser.add_argument('--pretrain-epoch', type=int, default=20)
     parser.add_argument('--run-type', type=str, default='train')
-    parser.add_argument('--data-path-miss', type=str, default='C:\\Users\\Christopher Salazar\\Desktop\\GAIN Research\\WGAN_RNN\\Code\\KDD_data\\kdd_w_miss.txt')
-    parser.add_argument('--data-path-wo-miss', type=str, default='C:\\Users\\Christopher Salazar\\Desktop\\GAIN Research\\WGAN_RNN\\Code\\KDD_data\\kdd_wo_miss.txt')
+    parser.add_argument('--data-path-miss', type=str, default='../KDD_data/kdd_w_miss.txt')
+    parser.add_argument('--data-path-wo-miss', type=str, default='../KDD_data/kdd_wo_miss.txt')
     parser.add_argument('--model-path', type=str, default=None)
     parser.add_argument('--result-path', type=str, default=None)
     parser.add_argument('--dataset-name', type=str, default=None)
