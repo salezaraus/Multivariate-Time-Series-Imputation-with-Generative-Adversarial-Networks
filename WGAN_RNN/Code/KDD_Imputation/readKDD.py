@@ -7,17 +7,13 @@ Created on Tue Nov 16 00:15:52 2021
 
 
 import numpy as np 
-import os
-from sklearn.model_selection import train_test_split
 
 # Inputs
-# =============================================================================
-# kdd_path_missing = 'C:\\Users\\Christopher Salazar\\Desktop\\GAIN Research\\WGAN_RNN\\Code\\KDD_data\\kdd_w_miss.txt'
-# kdd_path_wo_missing = 'C:\\Users\\Christopher Salazar\\Desktop\\GAIN Research\\WGAN_RNN\\Code\\KDD_data\\kdd_wo_miss.txt'
-# total_steps = 10898
-# n_inputs = 6
-# n_hours = 48
-# =============================================================================
+kdd_path_missing = 'C:\\Users\\Christopher Salazar\\Desktop\\GAIN Research\\WGAN_RNN\\Code\\KDD_data\\kdd_w_miss.txt'
+kdd_path_wo_missing = 'C:\\Users\\Christopher Salazar\\Desktop\\GAIN Research\\WGAN_RNN\\Code\\KDD_data\\kdd_wo_miss.txt'
+total_steps = 10898
+n_inputs = 66
+n_steps = 48
 
 class ReadKDD_Data():
     # first read all dataset
@@ -26,7 +22,7 @@ class ReadKDD_Data():
     def __init__(self, dataPath_miss, 
                  dataPath_wo_miss,
                  n_inputs,
-                 n_hours, 
+                 n_steps, 
                  batch_size = 16):
         
         # Read data with missing values
@@ -41,7 +37,7 @@ class ReadKDD_Data():
         
             
         self.n_inputs = n_inputs
-        self.n_hours = n_hours
+        self.n_steps = n_steps
         self.total_steps = 10898
         self.batch_size = batch_size
     
@@ -90,7 +86,7 @@ class ReadKDD_Data():
             
         return x, M, delta
     
-    def data_48_hrs(self, data_lines, n_inputs, n_hours, real = False):
+    def data_48_hrs(self, data_lines, n_inputs, n_steps, real = False):
         x = [] # Data matrix
         M = [] # Mask matrix 
         delta = [] # Delta Matrix
@@ -104,15 +100,15 @@ class ReadKDD_Data():
             data_full_chn = data_lines[20:230]
     
         # Every 6 time series are air quality inputs for one station 
-        for sta_idx in range(0,len(data_full_chn),6): 
-            sta_end_idx = sta_idx + 6
+        for sta_idx in range(0,n_inputs,n_inputs): 
+            sta_end_idx = sta_idx + n_inputs
             
             # Split time series into every 48 hours
-            for st_hr in range(0, int(self.total_steps/n_hours)*n_hours, 48): 
+            for st_hr in range(0, int(self.total_steps/n_steps)*n_steps, 48): 
                 end_hr = st_hr + 48
             
-                m_arr = np.ones((n_hours, n_inputs))
-                sta_arr = np.empty((n_hours, n_inputs), dtype = '<U10')
+                m_arr = np.ones((n_steps, n_inputs))
+                sta_arr = np.empty((n_steps, n_inputs), dtype = '<U10')
             
                 for idx, inpt in enumerate([*range(sta_idx, sta_end_idx)]): 
                     sta_arr[:,idx] = data_full_chn[inpt].split(':')[5].split(',')[st_hr:end_hr]
@@ -121,7 +117,7 @@ class ReadKDD_Data():
                     sta_arr[-1,idx]  =  sta_arr[-1,idx].strip('\n')
             
                 
-                m_arr = np.ones((n_hours, n_inputs)) # Initialize mask array
+                m_arr = np.ones((n_steps, n_inputs)) # Initialize mask array
                 m_arr[sta_arr == '?'] = 0 # find missing values
                 sta_arr[sta_arr == '?'] = np.nan # replace missing val with null
                 
@@ -154,7 +150,7 @@ class ReadKDD_Data():
         
         return delta_vec
     
-    def normalization(self, x_data, parameters=None):
+    def normalize(self, x_data, parameters=None):
       '''Normalize data in [0, 1] range.
       
       Args:
@@ -185,6 +181,38 @@ class ReadKDD_Data():
       #print(norm_parameters)
       
       return normalized_data, norm_parameters
+  
+    def standardize(self, x_data, parameters=None):
+      '''Stardardize data in [0, 1] range.
+      
+      Args:
+        - data: original data
+      
+      Returns:
+        - norm_data: normalized data
+        - norm_parameters: min_val, max_val for each feature for renormalization
+      '''
+      if parameters is None:
+        mean_val = np.nanmean(np.nanmean(x_data, axis = 1), axis = 0)
+        std_val = np.nanstd(np.nanstd(x_data, axis = 1), axis = 0)
+        
+        # Return norm_parameters for renormalization
+        stad_parameters = {'mean': mean_val,
+                         'std': std_val} 
+    
+      else:
+        mean_val = parameters['mean']
+        std_val = parameters['std']
+        
+    
+        
+        stad_parameters = {'mean': mean_val,
+                     'std': std_val} 
+    
+      standardized_data = (x_data-mean_val)/std_val
+      #print(norm_parameters)
+      
+      return standardized_data, stad_parameters
     
     
     
@@ -193,11 +221,11 @@ class ReadKDD_Data():
         
         x, M, delta = self.data_48_hrs(self.missing_lines, 
                                   self.n_inputs, 
-                                  self.n_hours)
+                                  self.n_steps)
         
         x_real, M_real, delta_real = self.data_48_hrs(self.non_missing_lines, 
                                                  self.n_inputs, 
-                                                 self.n_hours, 
+                                                 self.n_steps, 
                                                  real =True)
         
         
@@ -210,8 +238,8 @@ class ReadKDD_Data():
         M_real = M_real[0:192]
         delta_real = delta_real[0:192]
         
-        x_norm, x_params = self.normalization(x)
-        x_norm_real, xr_params = self.normalization(x_real, x_params)
+        x_norm, x_params = self.normalize(x)
+        x_norm_real, xr_params = self.normalize(x_real, x_params)
         x_norm[np.isnan(x_norm)] = 0
         
         self.x = x
@@ -236,9 +264,18 @@ class ReadKDD_Data():
             M_shuffle = np.asarray(self.M)[rand_idx]
             delta_shuffle = np.asarray(self.delta)[rand_idx]
             
+            x_r_shuffle = self.x_norm_real[rand_idx]
+            M_r_shuffle = np.asarray(self.M_real)[rand_idx]
+            delta_r_shuffle = np.asarray(self.delta_real)[rand_idx]
+            
             self.x_shuf = x_shuffle
             self.M_shuf = M_shuffle
             self.delta_shuf = delta_shuffle
+            
+            self.x_r_shuf = x_r_shuffle
+            self.M_r_shuf = M_r_shuffle
+            self.delta_r_shuf = delta_r_shuffle
+            
             self.isShuffle = isShuffle
             self.rand_idx = rand_idx 
             
@@ -250,14 +287,19 @@ class ReadKDD_Data():
                  x_b =  self.x_shuf[b_idx_s:b_idx_e]
                  M_b =  self.M_shuf[b_idx_s:b_idx_e]
                  delta_b =  self.delta_shuf[b_idx_s:b_idx_e]
-                 x_steps = [self.n_hours] * self.batch_size
+                 
+                 x_r_b =  self.x_r_shuf[b_idx_s:b_idx_e]
+                 M_r_b =  self.M_r_shuf[b_idx_s:b_idx_e]
+                 delta_r_b =  self.delta_r_shuf[b_idx_s:b_idx_e]
+                 
+                 x_steps = [self.n_steps] * self.batch_size
                  
                  #print(np.shape(x_b))
                  #print(M_b)
                  #print(delta_b)
                  #print('\n\n\n')
                  
-                 yield x_b, M_b, delta_b, x_steps
+                 yield x_b, M_b, delta_b, x_r_b, M_r_b, delta_r_b, x_steps
         else: 
             for b_idx_s in range(0, len(self.x_norm), self.batch_size):
                  b_idx_e = b_idx_s + self.batch_size
@@ -265,14 +307,19 @@ class ReadKDD_Data():
                  x_b =  self.x_norm[b_idx_s:b_idx_e]
                  M_b =  self.M[b_idx_s:b_idx_e]
                  delta_b =  self.delta[b_idx_s:b_idx_e]
-                 x_steps = [self.n_hours] * self.batch_size
+                 
+                 x_r_b =  self.x_real[b_idx_s:b_idx_e]
+                 M_r_b =  self.M_real[b_idx_s:b_idx_e]
+                 delta_r_b =  self.delta_real[b_idx_s:b_idx_e]
+                 
+                 x_steps = [self.n_steps] * self.batch_size
                  
                  #print(np.shape(x_b))
                  #print(np.shape(M_b))
                  #print(np.shape(delta_b))
                  #print('\n\n\n')
                  
-                 yield x_b, M_b, delta_b, x_steps
+                 yield x_b, M_b, delta_b, x_r_b, M_r_b, delta_r_b, x_steps
             
         
         
@@ -293,7 +340,7 @@ class ReadKDD_Data():
 # =============================================================================
         
 # =============================================================================
-# dt = ReadKDD_Data(kdd_path_missing, kdd_path_wo_missing, n_inputs, n_hours)
+# dt = ReadKDD_Data(kdd_path_missing, kdd_path_wo_missing, n_inputs, n_steps)
 # 
 # dt.gen_data()
 # dt.shuffle(isShuffle = True)

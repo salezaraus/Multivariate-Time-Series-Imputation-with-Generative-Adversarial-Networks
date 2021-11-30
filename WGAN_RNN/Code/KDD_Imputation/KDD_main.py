@@ -32,7 +32,7 @@ def main():
     parser.add_argument('--batch-size', type=int, default=16)
     parser.add_argument('--gen-length', type=int, default=96)
     parser.add_argument('--impute-iter', type=int, default=800)
-    parser.add_argument('--pretrain-epoch', type=int, default=20)
+    parser.add_argument('--pretrain-epoch', type=int, default=100)
     parser.add_argument('--run-type', type=str, default='train')
     parser.add_argument('--data-path-miss', type=str, default='../KDD_data/kdd_w_miss.txt')
     parser.add_argument('--data-path-wo-miss', type=str, default='../KDD_data/kdd_wo_miss.txt')
@@ -44,11 +44,11 @@ def main():
     parser.add_argument('--lr', type=float, default=0.002)
     #lr 0.001的时候 pretrain_loss降的很快，4个epoch就行了
     parser.add_argument('--epoch', type=int, default=25)
-    parser.add_argument('--n-inputs', type=int, default=6)
-    parser.add_argument('--n-hours', type=int, default=48)
+    parser.add_argument('--n-inputs', type=int, default=66)
+    parser.add_argument('--n-steps', type=int, default=48)
     parser.add_argument('--n-hidden-units', type=int, default=64)
     parser.add_argument('--n-classes', type=int, default=2)
-    parser.add_argument('--z-dim', type=int, default=64)
+    parser.add_argument('--z-dim', type=int, default=256)
     parser.add_argument('--checkpoint-dir', type=str, default='checkpoint',
                         help='Directory name to save the checkpoints')
     parser.add_argument('--result-dir', type=str, default='results',
@@ -66,8 +66,8 @@ def main():
             args.isBatch_normal=True
 
     #make the max step length of two datasett the same
-    epochs=[30]
-    g_loss_lambdas=[0.15]
+    epochs=[200]
+    g_loss_lambdas=[0.0]
     beta1s=[0.5]
     for beta1 in beta1s:
         for e in epochs:
@@ -76,7 +76,7 @@ def main():
                 args.beta1=beta1
                 args.g_loss_lambda=g_l
                 tf.reset_default_graph()
-                dt_train=ReadKDD_Data(args.data_path_miss, args.data_path_wo_miss, args.n_inputs, args.n_hours)
+                dt_train=ReadKDD_Data(args.data_path_miss, args.data_path_wo_miss, args.n_inputs, args.n_steps)
                 dt_train.gen_data()
                 tf.reset_default_graph()
                 config = tf.ConfigProto() 
@@ -97,8 +97,31 @@ def main():
                     gan.train()
                     print(" [*] Training finished!")
                     
+                    gan.plot_loss()
+                    
+                    x_imputed, x_real, M_batch, rand_idx, norm_params = gan.imputation(dt_train)
+                    
                     
                     print(" [*] Test dataset Imputation finished!")
                 tf.reset_default_graph()
+                
+    return x_imputed, x_real, M_batch, rand_idx, norm_params
 if __name__ == '__main__':
-    main()
+    x_imputed, x_real, M_batch, rand_idx, norm_params = main()
+    #main()
+    
+    
+# =============================================================================
+# mean_val = norm_params['mean']
+# std_val = norm_params['std']
+#    
+# x_i_renorm = [(x*std_val + mean_val) for x in x_imputed]
+# x_r_renorm = [(x*std_val + mean_val) for x in x_real]
+# =============================================================================
+
+
+min_val = norm_params['min_val']
+max_val = norm_params['max_val']
+#    
+x_i_renorm = [(x*(max_val + 1e-6) + min_val) for x in x_imputed]
+x_r_renorm = [(x*(max_val + 1e-6) + min_val) for x in x_real]
