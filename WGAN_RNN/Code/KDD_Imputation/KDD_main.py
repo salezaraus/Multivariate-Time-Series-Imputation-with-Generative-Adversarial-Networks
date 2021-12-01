@@ -99,15 +99,15 @@ def main():
                     
                     gan.plot_loss()
                     
-                    x_imputed, x_real, M_batch, rand_idx, norm_params = gan.imputation(dt_train)
+                    x_imputed, x_real, M_batch, deltas,  rand_idx, norm_params = gan.imputation(dt_train)
                     
                     
                     print(" [*] Test dataset Imputation finished!")
                 tf.reset_default_graph()
                 
-    return x_imputed, x_real, M_batch, rand_idx, norm_params
+    return x_imputed, x_real, M_batch, deltas, rand_idx, norm_params
 if __name__ == '__main__':
-    x_imputed, x_real, M_batch, rand_idx, norm_params = main()
+    x_imputed, x_real, M_batch, deltas, rand_idx, norm_params = main()
     #main()
     
     

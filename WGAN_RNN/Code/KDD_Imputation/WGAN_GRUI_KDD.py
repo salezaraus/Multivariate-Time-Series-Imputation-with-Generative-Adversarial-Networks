@@ -512,6 +512,7 @@ class WGAN(object):
         x_imputed = []
         x_real = []
         M_batch = [] 
+        deltas = []
         
         for x_b, M_b, delta_b, x_r_b, M_r_b, delta_r_b, x_steps in self.datasets.nextBatch():
             #self.z_need_tune=tf.assign(self.z_need_tune,tf.random_normal([self.batch_size,self.z_dim]))
@@ -535,13 +536,14 @@ class WGAN(object):
             x_imputed.append(imputed)
             x_real.append(x_r_b)
             M_batch.append(M_b)
+            deltas.append(delta_b)
             
             #imputed=tf.multiply((1-self.m),impute_out)+data_x
             #self.save_imputation(imputed,batchid,x_steps,delta_b,data_y,isTrain)
             batchid+=1
             impute_tune_time=1
         
-        return x_imputed, x_real, M_batch, self.datasets.rand_idx, self.datasets.norm_params
+        return x_imputed, x_real, M_batch, deltas, self.datasets.rand_idx, self.datasets.norm_params
 
         
         #self.save(self.checkpoint_dir, counter)

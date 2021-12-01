@@ -238,8 +238,8 @@ class ReadKDD_Data():
         M_real = M_real[0:192]
         delta_real = delta_real[0:192]
         
-        x_norm, x_params = self.normalize(x)
-        x_norm_real, xr_params = self.normalize(x_real, x_params)
+        x_norm, x_params = self.standardize(x)
+        x_norm_real, xr_params = self.standardize(x_real, x_params)
         x_norm[np.isnan(x_norm)] = 0
         
         self.x = x
