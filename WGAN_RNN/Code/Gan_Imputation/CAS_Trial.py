@@ -63,9 +63,9 @@ if args.isSlicing==0:
 if args.isSlicing==1:
         args.isSlicing=True
         
-args.epoch=1
-args.beta1=0.5
-args.g_loss_lambda=0.15
+args.epoch=30
+g_loss_lambdas=0.15
+beta1s=0.5
 
 tf.reset_default_graph()
 dt_train=readData.ReadPhysionetData(os.path.join(args.data_path,"train"), os.path.join(args.data_path,"train","list.txt"),isNormal=args.isNormal,isSlicing=args.isSlicing)
@@ -87,6 +87,44 @@ with tf.Session(config=config) as sess:
     
     # launch the graph in a session
     gan.train()
+    print(" [*] Training finished!")
 
 
+# =============================================================================
+# n_in = 41
+# n_hid = 64
+# n_steps = 48
+# 
+# wr_h=tf.get_variable("d_wr_h",shape=[n_in,n_hid],initializer=tf.random_normal_initializer())
+# w_out= tf.get_variable("d_w_out",shape=[n_hid, 1],initializer=tf.random_normal_initializer())
+# br_h= tf.get_variable("d_br_h",shape=[n_hid, ],initializer=tf.constant_initializer(0.001))
+# b_out= tf.get_variable("d_b_out",shape=[1, ],initializer=tf.constant_initializer(0.001))
+# 
+# M = dt.m[0:4]
+# X = dt.x[0:4]
+# deltaP = dt.deltaPre[0:4]
+# xlengths1 = X_lengths[0:4]
+# 
+# X = tf.reshape(X, [-1, n_in])
+# DeltaPre=tf.reshape(deltaP,[-1,n_in])
+# rth= tf.matmul(DeltaPre, wr_h)+br_h
+# rth=math_ops.exp(-tf.maximum(0.0,rth))
+# 
+# 
+# X=tf.concat([X,rth],1)
+# X_in = tf.reshape(X, [4, n_steps , n_in+n_hid])
+# grud_cell_d = mygru_cell.MyGRUCell15(n_hid)
+# init_state = grud_cell_d.zero_state(4, dtype=tf.float32)
+# 
+# 
+# outputs, final_state = tf.nn.dynamic_rnn(grud_cell_d, X_in, \
+#                     initial_state=init_state,\
+#                     sequence_length=xlengths1,
+#                     time_major=False)
+# 
+# keep_prob = 0.5
+# 
+# out_logit=tf.matmul(tf.nn.dropout(final_state,keep_prob), w_out) + b_out
+# out =tf.nn.sigmoid(out_logit)    #选取最后一个 output
+# =============================================================================
 
