@@ -88,6 +88,10 @@ with tf.Session(config=config) as sess:
     # launch the graph in a session
     gan.train()
     print(" [*] Training finished!")
+    
+    gan.plot_loss()
+    
+    gan.imputation(dt_train,True)
 
 
 # =============================================================================

@@ -509,6 +509,7 @@ class WGAN(object):
         impute_tune_time=1
         counter=1
         
+        fake_data = []
         x_imputed = []
         x_real = []
         M_batch = [] 
@@ -533,6 +534,7 @@ class WGAN(object):
                           % (batchid, impute_tune_time, self.impute_iter, time.time() - start_time, impute_loss))
                     #self.writer.add_summary(summary_str, counter/10)
                     
+            fake_data.append(impute_out)
             x_imputed.append(imputed)
             x_real.append(x_r_b)
             M_batch.append(M_b)
@@ -543,7 +545,7 @@ class WGAN(object):
             batchid+=1
             impute_tune_time=1
         
-        return x_imputed, x_real, M_batch, deltas, self.datasets.rand_idx, self.datasets.norm_params
+        return x_imputed, x_real, M_batch, deltas, fake_data, self.datasets.rand_idx, self.datasets.norm_params
 
         
         #self.save(self.checkpoint_dir, counter)

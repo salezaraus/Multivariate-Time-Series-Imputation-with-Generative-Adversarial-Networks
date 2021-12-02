@@ -99,29 +99,71 @@ def main():
                     
                     gan.plot_loss()
                     
-                    x_imputed, x_real, M_batch, deltas,  rand_idx, norm_params = gan.imputation(dt_train)
+                    x_imputed, x_real, M_batch, deltas, fake_data,  rand_idx, norm_params = gan.imputation(dt_train)
                     
                     
                     print(" [*] Test dataset Imputation finished!")
                 tf.reset_default_graph()
                 
-    return x_imputed, x_real, M_batch, deltas, rand_idx, norm_params
+    return x_imputed, x_real, M_batch, deltas, fake_data, rand_idx, norm_params
 if __name__ == '__main__':
-    x_imputed, x_real, M_batch, deltas, rand_idx, norm_params = main()
+    x_imputed, x_real, M_batch, deltas, fake_data, rand_idx, norm_params = main()
     #main()
     
     
-# =============================================================================
-# mean_val = norm_params['mean']
-# std_val = norm_params['std']
-#    
-# x_i_renorm = [(x*std_val + mean_val) for x in x_imputed]
-# x_r_renorm = [(x*std_val + mean_val) for x in x_real]
-# =============================================================================
+mean_val = norm_params['mean']
+std_val = norm_params['std']
+   
+x_i_renorm = [(x*std_val + mean_val) for x in x_imputed]
+x_r_renorm = [(x*std_val + mean_val) for x in x_real]
 
+from itertools import chain
 
-min_val = norm_params['min_val']
-max_val = norm_params['max_val']
-#    
-x_i_renorm = [(x*(max_val + 1e-6) + min_val) for x in x_imputed]
-x_r_renorm = [(x*(max_val + 1e-6) + min_val) for x in x_real]
+x_i_order = np.array(list(chain(*x_i_renorm)))
+x_r_order = np.array(list(chain(*x_r_renorm)))
+M_order = np.array(list(chain(*M_batch)))
+
+x_i_order = [x_i_order[np.where(rand_idx == i)] for i in range(len(rand_idx))]
+x_r_order =[x_r_order[np.where(rand_idx == i)] for i in range(len(rand_idx))]
+M_order = [M_order[np.where(rand_idx == i)] for i in range(len(rand_idx))]
+
+x_i_order = np.array(list(chain(*x_i_order)))
+x_r_order = np.array(list(chain(*x_r_order)))
+M_order = np.array(list(chain(*M_order)))
+
+x_i_order = np.array(list(chain(*x_i_order)))
+M_order = np.array(list(chain(*M_order)))
+
+feat = 5
+
+t_real = np.where(M_order[:,feat] == 1)
+x_real = x_i_order[:,feat][t_real]
+
+t_imp = np.where(M_order[:,feat] == 0)
+x_imp = x_i_order[:,feat][t_imp]
+
+from matplotlib import pyplot as plt
+%matplotlib qt5
+
+plt.figure(1)
+plt.scatter(t_real, x_real, s = 10)
+plt.xlabel("Time (hrs)")
+plt.ylabel("PM10")
+plt.legend(["Real"])
+plt.title('Full time series for SO2 at Beijing:aotizhongxin_aq')
+
+plt.figure(2)
+plt.scatter(t_real, x_real, s = 10)
+plt.scatter(t_imp, x_imp, s = 10)
+plt.xlabel("Time (hrs)")
+plt.ylabel("PM10")
+plt.title('Full time series for SO2 at Beijing:aotizhongxin_aq')
+plt.legend(["Real", "Imputed"])
+
+# =============================================================================
+# min_val = norm_params['min_val']
+# max_val = norm_params['max_val']
+# #    
+# x_i_renorm = [(x*(max_val + 1e-6) + min_val) for x in x_imputed]
+# x_r_renorm = [(x*(max_val + 1e-6) + min_val) for x in x_real]
+# =============================================================================

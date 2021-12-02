@@ -450,6 +450,9 @@ class WGAN(object):
         start_epoch = 0
         start_batch_id = 0
         counter = 1
+        
+        d_loss_epoch = []
+        g_loss_epoch = [] 
 
 # =============================================================================
 #         # restore check-point if it exits
@@ -558,9 +561,14 @@ class WGAN(object):
             # After an epoch, start_batch_id is set to zero
             # non-zero value is only for the first epoch after loading pre-trained model
             start_batch_id = 0
+            
+            d_loss_epoch.append(d_loss)
+            g_loss_epoch.append(g_loss)
 
         
         self.save(self.checkpoint_dir, counter)
+        self.d_loss_epoch = d_loss_epoch
+        self.g_loss_epoch = g_loss_epoch
 
     def imputation(self,dataset,isTrain):
         self.datasets=dataset
@@ -713,3 +721,21 @@ class WGAN(object):
         else:
             print(" [*] Failed to find a checkpoint")
             return False, 0
+        
+    def plot_loss(self): 
+        """Plots loss function"""
+        
+        from matplotlib import pyplot as plt
+        
+        epochs = [i for i in range(len(self.d_loss_epoch))]
+        
+        plt.plot(epochs,self.d_loss_epoch)
+        plt.plot(epochs,self.g_loss_epoch)
+        
+        plt.xlabel("Epochs")
+        plt.ylabel("Loss Function")
+        plt.title('Loss function for Physionet')
+        
+        plt.legend(["D_loss", "G_loss"])
+        
+        plt.show() 
