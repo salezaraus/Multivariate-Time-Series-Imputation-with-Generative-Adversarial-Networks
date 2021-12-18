@@ -33,51 +33,68 @@ RMSE_ave_ni = np.mean(RMSEs, axis = 0)
 from matplotlib import pyplot as plt
 %matplotlib qt5
 
+Sta_num = 3
+
+sta_dict = {1 : [0,6], 
+            2: [6,12], 
+            3: [12,18], 
+            4: [18,24], 
+            5: [24,30], 
+            6: [30,36], 
+            7: [36,42], 
+            8: [42,48], 
+            9: [48,54], 
+            10: [54,60], 
+            11: [60,66]}
+
+sta_ind = [i for i in range(66)]
+sta_sl = sta_ind[sta_dict[Sta_num][0]: sta_dict[Sta_num][1]]
+
 epochs = np.arange(1,len(RMSE_ave)+1)
 
 plt.figure(1)
-plt.plot(epochs, RMSE_ave[:,0])
-plt.plot(epochs, RMSE_ave_ni[:,0])
+plt.plot(epochs, RMSE_ave[:,sta_sl[0]])
+plt.plot(epochs, RMSE_ave_ni[:,sta_sl[0]])
 plt.legend(["400 Imp Iter", "No Iter Imp"])
 plt.xlabel("Epoch")
 plt.ylabel("RMSE")
 plt.title('Average Validation RMSE for PM2.5 at station: miyunshuiku_aq')  
 
 plt.figure(2)
-plt.plot(epochs, RMSE_ave[:,1])
-plt.plot(epochs, RMSE_ave_ni[:,1])
+plt.plot(epochs, RMSE_ave[:,sta_sl[1]])
+plt.plot(epochs, RMSE_ave_ni[:,sta_sl[1]])
 plt.legend(["400 Imp Iter", "No Iter Imp"])
 plt.xlabel("Epoch")
 plt.ylabel("RMSE")
 plt.title('Average Validation RMSE for PM10 at station: miyunshuiku_aq')  
 
 plt.figure(3)
-plt.plot(epochs, RMSE_ave[:,2])
-plt.plot(epochs, RMSE_ave_ni[:,2])
+plt.plot(epochs, RMSE_ave[:,sta_sl[2]])
+plt.plot(epochs, RMSE_ave_ni[:,sta_sl[2]])
 plt.legend(["400 Imp Iter", "No Iter Imp"])
 plt.xlabel("Epoch")
 plt.ylabel("RMSE")
 plt.title('Average Validation RMSE for NO2 at station: miyunshuiku_aq') 
 
 plt.figure(4)
-plt.plot(epochs, RMSE_ave[:,3])
-plt.plot(epochs, RMSE_ave_ni[:,3])
+plt.plot(epochs, RMSE_ave[:,sta_sl[3]])
+plt.plot(epochs, RMSE_ave_ni[:,sta_sl[3]])
 plt.legend(["400 Imp Iter", "No Iter Imp"])
 plt.xlabel("Epoch")
 plt.ylabel("RMSE")
 plt.title('Average Validation RMSE for CO at station: miyunshuiku_aq')
 
 plt.figure(5)
-plt.plot(epochs, RMSE_ave[:,4])
-plt.plot(epochs, RMSE_ave_ni[:,4])
+plt.plot(epochs, RMSE_ave[:,sta_sl[4]])
+plt.plot(epochs, RMSE_ave_ni[:,sta_sl[4]])
 plt.legend(["400 Imp Iter", "No Iter Imp"])
 plt.xlabel("Epoch")
 plt.ylabel("RMSE")
 plt.title('Average Validation RMSE for O3 at station: miyunshuiku_aq')   
 
 plt.figure(6)
-plt.plot(epochs, RMSE_ave[:,5])
-plt.plot(epochs, RMSE_ave_ni[:,5])
+plt.plot(epochs, RMSE_ave[:,sta_sl[5]])
+plt.plot(epochs, RMSE_ave_ni[:,sta_sl[5]])
 plt.legend(["400 Imp Iter", "No Iter Imp"])
 plt.xlabel("Epoch")
 plt.ylabel("RMSE")

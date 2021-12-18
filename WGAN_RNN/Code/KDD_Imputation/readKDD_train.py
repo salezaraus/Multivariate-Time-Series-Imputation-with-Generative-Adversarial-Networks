@@ -10,9 +10,11 @@ import numpy as np
 import random 
 
 # Inputs
-data_path = 'C:\\Users\\Christopher Salazar\\Desktop\\GAIN Research\\WGAN_RNN\\Code\\KDD_data\\beijing_17_18_aq.csv'
-n_steps = 24
-n_stations = 11
+# =============================================================================
+# data_path = 'C:\\Users\\Christopher Salazar\\Desktop\\GAIN Research\\WGAN_RNN\\Code\\KDD_data\\beijing_17_18_aq.csv'
+# n_steps = 48
+# n_stations = 11
+# =============================================================================
 
 class ReadKDD_Data():
     # first read all dataset
@@ -21,7 +23,7 @@ class ReadKDD_Data():
     def __init__(self, data_path,
                  n_steps, 
                  n_stations, 
-                 batch_size = 16):
+                 batch_size = 14):
         
         # Read data with missing values
         kdd = np.genfromtxt(data_path, delimiter=',',skip_header=1,dtype = 'str')   
@@ -36,11 +38,19 @@ class ReadKDD_Data():
         # Prepare all known data with full 24 hr periods
         valid_idx = self.get_valid_idx(kdd[:self.total_steps])
         kdd = self.concatenate_values(kdd)[valid_idx]
-        
-        self.kdd = kdd.astype(np.float)
-        self.M_real = np.ones(np.shape(kdd))
-        self.t_steps_v = np.shape(kdd)[0] # number of total steps after valid
+        t_steps_v = np.shape(kdd)[0] # number of total steps after valid
                                           # entry
+        
+        # Cut off 
+        if n_steps == 48 and t_steps_v%self.n_steps != 0: 
+            self.kdd = kdd.astype(np.float)[:len(kdd)-24]
+        else: 
+            self.kdd = kdd.astype(np.float)
+        
+        # Initialize masking matrix
+        self.M_real = np.ones(np.shape(self.kdd))
+        
+        self.t_steps_v = np.shape(self.kdd)[0]
         
     def concatenate_values(self, data):
         # Concatentates data together based on how many stations that should  
@@ -76,6 +86,8 @@ class ReadKDD_Data():
                 
         valid_dates = [k for k,v in date_dict.items() if v == 24]
         valid_dates.sort()
+        
+        self.valid_dates = valid_dates
 
         counter = 0
         for date in valid_dates:
@@ -283,7 +295,7 @@ class ReadKDD_Data():
                  #print(delta_b)
                  #print('\n\n\n')
                  
-                 yield x_b, M_b, delta_b, x_r_b, M_r_b, delta_r_b, x_steps
+                 yield x_b, M_b, delta_b, x_r_b, M_r_b, delta_r_b, x_steps#, n_batch
         else: 
             for b_idx_s in range(0, int(len(self.x_shuf)/self.batch_size)* self.batch_size, self.batch_size):
                  b_idx_e = b_idx_s + self.batch_size
@@ -296,7 +308,7 @@ class ReadKDD_Data():
                  M_r_b =  self.M_real[b_idx_s:b_idx_e]
                  delta_r_b =  self.delta_real[b_idx_s:b_idx_e]
                  
-                # n_batch= len(x_b)
+                 #n_batch= len(x_b)
                  
                  x_steps = [self.n_steps] * self.batch_size
                  
@@ -305,7 +317,7 @@ class ReadKDD_Data():
                  #print(np.shape(delta_b))
                  #print('\n\n\n')
                  
-                 yield x_b, M_b, delta_b, x_r_b, M_r_b, delta_r_b, x_steps
+                 yield x_b, M_b, delta_b, x_r_b, M_r_b, delta_r_b, x_steps#, n_batch
             
         
         
@@ -315,8 +327,7 @@ class ReadKDD_Data():
 # fold_idx = dt.fold_idx[0]
 # dt.gen_data(fold_idx)
 # dt.shuffle(True)
-# =============================================================================
-# =============================================================================
+# 
 # for x_b, M_b, delta_b, x_r_b, M_r_b, delta_r_b, x_steps, batch_dyn in dt.nextBatch(): 
 #     print(batch_dyn)
 # =============================================================================

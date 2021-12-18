@@ -492,17 +492,19 @@ class WGAN(object):
             g_loss_epoch.append(g_loss)
             
             # Compute RMSE after each epoch by imputing data
-            x_imputed, x_real, M_batch, deltas, fake_data,  rand_idx, norm_params = self.imputation(self.datasets)
-            
-            x_imp = np.reshape(x_imputed,(len(x_imputed)*self.n_steps*self.batch_size, self.n_inputs))
-            x_r = np.reshape(x_real,(len(x_real)*self.n_steps*self.batch_size, self.n_inputs))
-            M_batch = np.reshape(M_batch,(len(M_batch)*self.n_steps*self.batch_size, self.n_inputs))
-            
-            tot_miss_feature = np.count_nonzero(1-M_batch, axis = 0)
-            
-            RMSE = np.sqrt(np.sum(np.square(x_imp - x_r), axis =0)/tot_miss_feature)
-            
-            RMSEs.append(RMSE)
+# =============================================================================
+#             x_imputed, x_real, M_batch, deltas, fake_data,  rand_idx, norm_params = self.imputation(self.datasets)
+#             
+#             x_imp = np.reshape(x_imputed,(len(x_imputed)*self.n_steps*self.batch_size, self.n_inputs))
+#             x_r = np.reshape(x_real,(len(x_real)*self.n_steps*self.batch_size, self.n_inputs))
+#             M_batch = np.reshape(M_batch,(len(M_batch)*self.n_steps*self.batch_size, self.n_inputs))
+#             
+#             tot_miss_feature = np.count_nonzero(1-M_batch, axis = 0)
+#             
+#             RMSE = np.sqrt(np.sum(np.square(x_imp - x_r), axis =0)/tot_miss_feature)
+#             
+#             RMSEs.append(RMSE)
+# =============================================================================
                 
             # After an epoch, start_batch_id is set to zero
             # non-zero value is only for the first epoch after loading pre-trained model
@@ -561,17 +563,15 @@ class WGAN(object):
             batchid+=1
             impute_tune_time=1
             
-# =============================================================================
-#         x_imp = np.reshape(x_imputed,(len(x_imputed)*self.n_steps*self.batch_size, self.n_inputs))
-#         x_r = np.reshape(x_real,(len(x_real)*self.n_steps*self.batch_size, self.n_inputs))
-#         M_batch = np.reshape(M_batch,(len(M_batch)*self.n_steps*self.batch_size, self.n_inputs))
-#         
-#         tot_miss_feature = np.count_nonzero(1-M_batch, axis = 0)
-#         
-#         RMSE = np.sqrt(np.sum(np.square(x_imp - x_r), axis =0)/tot_miss_feature)
-# =============================================================================
+        x_imp = np.reshape(x_imputed,(len(x_imputed)*self.n_steps*self.batch_size, self.n_inputs))
+        x_r = np.reshape(x_real,(len(x_real)*self.n_steps*self.batch_size, self.n_inputs))
+        M_batch = np.reshape(M_batch,(len(M_batch)*self.n_steps*self.batch_size, self.n_inputs))
         
-        return x_imputed, x_real, M_batch, deltas, fake_data, self.datasets.rand_idx, self.datasets.norm_params
+        tot_miss_feature = np.count_nonzero(1-M_batch, axis = 0)
+        
+        RMSE = np.sqrt(np.sum(np.square(x_imp - x_r), axis =0)/tot_miss_feature)
+        
+        return x_imputed, x_real, M_batch, deltas, fake_data, self.datasets.rand_idx, self.datasets.norm_params, RMSE
 
         
         #self.save(self.checkpoint_dir, counter)

@@ -23,15 +23,16 @@ import numpy as np
 from readKDD_train import ReadKDD_Data
 import os
 from utils import show_all_variables
+import random
 
 """main"""
 def main():
     # parse arguments
     parser = argparse.ArgumentParser(description='manual to this script')
     parser.add_argument('--gpus', type=str, default = None)
-    parser.add_argument('--batch-size', type=int, default=16)
+    parser.add_argument('--batch-size', type=int, default=14)
     parser.add_argument('--gen-length', type=int, default=96)
-    parser.add_argument('--impute-iter', type=int, default=1)
+    parser.add_argument('--impute-iter', type=int, default=800)
     parser.add_argument('--pretrain-epoch', type=int, default=50)
     parser.add_argument('--run-type', type=str, default='train')
     parser.add_argument('--data-path', type=str, default='../KDD_data/beijing_17_18_aq.csv')
@@ -40,11 +41,11 @@ def main():
     parser.add_argument('--dataset-name', type=str, default=None)
     parser.add_argument('--g-loss-lambda',type=float,default=0.1)
     parser.add_argument('--beta1',type=float,default=0.5)
-    parser.add_argument('--lr', type=float, default=0.002)
+    parser.add_argument('--lr', type=float, default=0.003)
     #lr 0.001的时候 pretrain_loss降的很快，4个epoch就行了
     parser.add_argument('--epoch', type=int, default=25)
     parser.add_argument('--n-stations', type=int, default=11)
-    parser.add_argument('--n-steps', type=int, default=24)
+    parser.add_argument('--n-steps', type=int, default=48)
     parser.add_argument('--n-hidden-units', type=int, default=64)
     parser.add_argument('--n-classes', type=int, default=2)
     parser.add_argument('--z-dim', type=int, default=256)
@@ -65,16 +66,18 @@ def main():
             args.isBatch_normal=True
 
     #make the max step length of two datasett the same
-    epochs=[90]
-    g_l = 0.0
+    epochs=[110]
+    g_ls = [random.random()*16 for i in range(20)]
+    g_ls.sort()
     beta1s=[0.5]
     counter = 1
     RMSE_tot = []
     dt_train=ReadKDD_Data(args.data_path, args.n_steps, args.n_stations)
     dt_train.partition_data()
+    fold_idx = dt_train.fold_idx[0]
     for beta1 in beta1s:
         for e in epochs:
-            for fold_idx in dt_train.fold_idx:
+            for g_l in g_ls:
                 args.epoch=e
                 args.beta1=beta1
                 args.g_loss_lambda=g_l
@@ -96,26 +99,27 @@ def main():
                     show_all_variables()
             
                     # launch the graph in a session
-                    RMSEs = gan.train()
+                    #RMSEs = gan.train()
+                    gan.train()
                     print(" [*] Training finished!")
                     
                     gan.plot_loss(counter)
                     
                     counter +=1
                     
-                    #x_imputed, x_real, M_batch, deltas, fake_data,  rand_idx, norm_params, RMSE = gan.imputation(dt_train)
+                    x_imputed, x_real, M_batch, deltas, fake_data,  rand_idx, norm_params, RMSE = gan.imputation(dt_train)
                     
-                    RMSE_tot.append(RMSEs)
+                    RMSE_tot.append(RMSE)
                     
                     
                     print(" [*] Test dataset Imputation finished!")
                 tf.reset_default_graph()
                 
     #return x_imputed, x_real, M_batch, deltas, fake_data, rand_idx, norm_params
-    return RMSE_tot
+    return RMSE_tot, g_ls
 if __name__ == '__main__':
     #x_imputed, x_real, M_batch, deltas, fake_data, rand_idx, norm_params = main()
-    RMSE_tot = main()
+    RMSE_tot, g_ls = main()
     
     
 # =============================================================================
@@ -226,4 +230,11 @@ if __name__ == '__main__':
 #     
 # =============================================================================
     
-  
+from matplotlib import pyplot as plt 
+
+plt.figure(1)
+plt.plot(g_ls, np.mean(RMSE_tot, axis = 1))
+plt.xlabel("Lambda")
+plt.ylabel("RMSE")
+plt.title('RMSE vs Lambda w/ learning rate = 0.003')
+

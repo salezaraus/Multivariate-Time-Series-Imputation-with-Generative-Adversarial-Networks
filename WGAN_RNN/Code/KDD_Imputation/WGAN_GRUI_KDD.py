@@ -515,7 +515,7 @@ class WGAN(object):
         M_batch = [] 
         deltas = []
         
-        for x_b, M_b, delta_b, x_r_b, M_r_b, delta_r_b, x_steps in self.datasets.nextBatch():
+        for x_b, M_b, delta_b, x_r_b, M_r_b, delta_r_b, x_steps, n_batch in self.datasets.nextBatch():
             #self.z_need_tune=tf.assign(self.z_need_tune,tf.random_normal([self.batch_size,self.z_dim]))
             tf.variables_initializer([self.z_need_tune]).run()
             for i in range(0,self.impute_iter):
